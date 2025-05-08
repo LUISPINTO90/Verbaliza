@@ -17,7 +17,7 @@ const Hero = () => {
           </h1>
 
           <p className="text-lg md:text-xl lg:text-2xl text-neutral-600 mb-4 md:mb-6 max-w-2xl transition-all">
-            Con Verbaliza, lee y escribe ideas para compartir.
+            Con Verbaliza, lee y escribe contenido para compartir.
           </p>
 
           <Button

@@ -12,7 +12,6 @@ export default function Footer() {
             <Button
               variant="outline"
               size="icon"
-              asChild
               className="h-auto hover:bg-transparent"
             >
               <Image
@@ -33,10 +32,9 @@ export default function Footer() {
 
             <div className="flex items-center">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                asChild
-                className="h-8 w-8 text-neutral-500 hover:text-neutral-800 hover:bg-transparent"
+                className="rounded-full h-8 w-8 text-neutral-500 hover:text-neutral-800 hover:bg-transparent"
               >
                 <Link
                   href="https://github.com"

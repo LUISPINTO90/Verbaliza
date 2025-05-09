@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 
-const Hero = () => {
+export default function Hero() {
   return (
     <div className="w-full py-4 md:py-6 lg:py-8">
       <div className="container px-4 md:px-6 mx-auto">
@@ -30,6 +30,4 @@ const Hero = () => {
       </div>
     </div>
   );
-};
-
-export default Hero;
+}

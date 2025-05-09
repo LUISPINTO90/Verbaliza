@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Verbaliza: Lee y escribe contenido.",
   description:
-    "Descubre contenido único, verbaliza tus ideas y comparte ideas que importan.",
+    "Descubre contenido único, verbaliza y comparte ideas que importan.",
 };
 
 export default function RootLayout({

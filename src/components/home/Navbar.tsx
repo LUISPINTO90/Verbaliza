@@ -7,7 +7,10 @@ export default function Navbar() {
     <nav className="w-full border-b border-gray-100 bg-white">
       <div className="container mx-auto flex h-16 items-center px-4 sm:px-6 lg:px-8">
         <div className="w-full flex justify-center sm:justify-start items-center">
-          <Link href="/" className="flex items-center">
+          <Link
+            href="/"
+            className="flex items-center transition-all duration-300 ease-in-out transform hover:scale-105"
+          >
             <Image
               src="/logo.png"
               alt="Logo"
@@ -23,13 +26,13 @@ export default function Navbar() {
             <Button
               variant="outline"
               size="lg"
-              className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-colors mr-3"
+              className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 mr-3 cursor-pointer"
             >
               Iniciar sesión
             </Button>
             <Button
               size="lg"
-              className="bg-neutral-700 text-white hover:bg-neutral-800 transition-colors"
+              className="bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
             >
               Regístrate
             </Button>

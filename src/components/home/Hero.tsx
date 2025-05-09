@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import AuthDialog from "@/components/auth/AuthDialog";
 
 export default function Hero() {
   return (
@@ -36,12 +37,16 @@ export default function Hero() {
             Con Verbaliza, lee y escribe contenido para compartir.
           </p>
 
-          <Button
-            size="lg"
-            className="cursor-pointer bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 px-6 py-6 text-lg w-4/5 md:w-1/2"
-          >
-            Empieza ahora
-          </Button>
+          <AuthDialog
+            trigger={
+              <Button
+                size="lg"
+                className="cursor-pointer bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 px-6 py-6 text-lg w-4/5 md:w-1/2"
+              >
+                Empieza ahora
+              </Button>
+            }
+          />
         </div>
       </div>
     </div>

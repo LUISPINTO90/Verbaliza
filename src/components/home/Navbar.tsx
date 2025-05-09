@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import AuthDialog from "@/components/auth/AuthDialog";
 
 export default function Navbar() {
   return (
@@ -23,19 +24,30 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden sm:flex items-center ml-auto">
-            <Button
-              variant="outline"
-              size="lg"
-              className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 mr-3 cursor-pointer"
-            >
-              Iniciar sesión
-            </Button>
-            <Button
-              size="lg"
-              className="bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-            >
-              Regístrate
-            </Button>
+            {/* Botón Iniciar sesión */}
+            <AuthDialog
+              trigger={
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 mr-3 cursor-pointer"
+                >
+                  Iniciar sesión
+                </Button>
+              }
+            />
+
+            {/* Botón Regístrate */}
+            <AuthDialog
+              trigger={
+                <Button
+                  size="lg"
+                  className="bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                >
+                  Regístrate
+                </Button>
+              }
+            />
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ export default function Hero() {
     <div className="w-full py-4 md:py-6 lg:py-8">
       <div className="container px-4 md:px-6 mx-auto">
         <div className="flex flex-col items-center mx-auto max-w-2xl">
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4 md:mb-5 lg:mb-6 transition-all w-full text-left">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter mb-4 md:mb-5 lg:mb-6 transition-all w-full text-left">
             <div className="flex flex-col">
               <span className="text-neutral-800 drop-shadow-md">
                 <span className="bg-gradient-to-b from-neutral-500 to-neutral-800 bg-clip-text text-transparent">

@@ -61,7 +61,6 @@ export default function PasswordFormView({
             type="password"
             placeholder="••••••••"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
-            required
           />
         </div>
 
@@ -74,7 +73,11 @@ export default function PasswordFormView({
 
         <div className="mt-6 text-center">
           <button
-            onClick={onRegister}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onRegister();
+            }}
             className="text-sm text-neutral-600 hover:text-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
           >
             ¿No tienes una cuenta?{" "}

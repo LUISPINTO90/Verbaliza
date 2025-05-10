@@ -61,7 +61,6 @@ export default function RegisterFormView({
             type="email"
             placeholder="tucorreo@ejemplo.com"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
-            required
           />
         </div>
 
@@ -77,7 +76,6 @@ export default function RegisterFormView({
             type="password"
             placeholder="••••••••"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
-            required
           />
         </div>
 
@@ -93,7 +91,6 @@ export default function RegisterFormView({
             type="password"
             placeholder="••••••••"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
-            required
           />
         </div>
 
@@ -106,7 +103,11 @@ export default function RegisterFormView({
 
         <div className="mt-6 text-center">
           <button
-            onClick={onLogin}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onLogin();
+            }}
             className="text-sm text-neutral-600 hover:text-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
           >
             ¿Ya tienes una cuenta?{" "}

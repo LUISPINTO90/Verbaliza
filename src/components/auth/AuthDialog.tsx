@@ -1,90 +1,120 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
   DrawerTrigger,
+  DrawerClose,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import { Mail } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import MainAuthOptions from "./MainAuthOptions";
+import EmailFormView from "./EmailFormView";
+import PasswordFormView from "./PasswordFormView";
+import RegisterFormView from "./RegisterFormView";
 
 interface AuthDialogProps {
   trigger: React.ReactNode;
 }
 
-// Componente de formulario para compartir entre Dialog y Drawer
-function AuthForm() {
-  return (
-    <div className="mt-2">
-      <p className="text-neutral-700 mb-6 sr-only">
-        Usa tu correo electrónico o cuenta de Google para acceder a Verbaliza.
-      </p>
-
-      {/* Botón de Google */}
-      <Button
-        variant="outline"
-        className="w-full mb-3 py-6 relative"
-        onClick={() => {
-          // Implementación futura de autenticación con Google
-        }}
-      >
-        <div className="absolute left-6">
-          <Image src="/google.svg" alt="Google" width={20} height={20} />
-        </div>
-        <span className="mx-auto">Usar Google</span>
-      </Button>
-
-      {/* Botón de Correo Electrónico */}
-      <Button
-        variant="outline"
-        className="w-full py-6 relative"
-        onClick={() => {
-          // Implementación futura para formulario de correo
-        }}
-      >
-        <div className="absolute left-6">
-          <Mail size={20} />
-        </div>
-        <span className="mx-auto">Usar un correo electrónico</span>
-      </Button>
-    </div>
-  );
-}
-
 export default function AuthDialog({ trigger }: AuthDialogProps) {
   const [open, setOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<
+    "main" | "email" | "password" | "register"
+  >("main");
   const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  const handleEmailClick = () => {
+    setCurrentView("email");
+  };
+
+  const handleBackClick = () => {
+    if (currentView === "email") {
+      setCurrentView("main");
+    } else if (currentView === "password") {
+      setCurrentView("email");
+    } else if (currentView === "register") {
+      setCurrentView("main");
+    }
+  };
+
+  const handleContinue = () => {
+    if (currentView === "email") {
+      setCurrentView("password");
+    } else if (currentView === "password" || currentView === "register") {
+      // Aquí iría la lógica para iniciar sesión o registrarse
+      setOpen(false);
+    }
+  };
+
+  const handleRegister = () => {
+    setCurrentView("register");
+  };
+
+  const handleLogin = () => {
+    setCurrentView("email");
+  };
+
+  // Resetear la vista al cerrar el diálogo
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      // Pequeño retraso para que no se vea el cambio antes de cerrarse
+      setTimeout(() => {
+        setCurrentView("main");
+      }, 300);
+    }
+  };
+
+  // Contenido compartido entre Dialog y Drawer
+  const sharedContent = (
+    <div className="relative overflow-hidden">
+      <AnimatePresence mode="wait" initial={false}>
+        {currentView === "main" ? (
+          <MainAuthOptions key="main" onEmailClick={handleEmailClick} />
+        ) : currentView === "email" ? (
+          <EmailFormView
+            key="email"
+            onBack={handleBackClick}
+            onContinue={handleContinue}
+            onRegister={handleRegister}
+          />
+        ) : currentView === "password" ? (
+          <PasswordFormView
+            key="password"
+            onBack={handleBackClick}
+            onContinue={handleContinue}
+            onRegister={handleRegister}
+          />
+        ) : (
+          <RegisterFormView
+            key="register"
+            onBack={handleBackClick}
+            onContinue={handleContinue}
+            onLogin={handleLogin}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   // Versión para escritorio (Dialog)
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-bold mb-2">
-              Inicia sesión o regístrate en un momento
-            </DialogTitle>
-            <DialogDescription className="text-neutral-700">
-              Usa tu correo electrónico o cuenta de Google para acceder a
-              Verbaliza.
-            </DialogDescription>
-          </DialogHeader>
-          <AuthForm />
+        <DialogContent className="sm:max-w-md overflow-hidden p-6">
+          <DialogClose className="absolute top-4 right-4 sr-only">
+            Cerrar
+          </DialogClose>
+          {sharedContent}
         </DialogContent>
       </Dialog>
     );
@@ -92,19 +122,11 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
 
   // Versión para móvil (Drawer)
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
+    <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
       <DrawerContent className="px-4 pb-8">
-        <DrawerHeader>
-          <DrawerTitle className="text-3xl font-bold mb-2 text-center">
-            Inicia sesión o regístrate en un momento
-          </DrawerTitle>
-          <DrawerDescription className="text-neutral-700 text-center">
-            Usa tu correo electrónico o cuenta de Google para acceder a
-            Verbaliza.
-          </DrawerDescription>
-        </DrawerHeader>
-        <AuthForm />
+        <DrawerClose className="sr-only">Cerrar</DrawerClose>
+        <div className="pt-4">{sharedContent}</div>
       </DrawerContent>
     </Drawer>
   );

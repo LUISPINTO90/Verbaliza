@@ -164,6 +164,7 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
       shouldScaleBackground={!isKeyboardOpen}
       // Evitar que el drawer se cierre con un deslizamiento accidental
       dismissible={!isKeyboardOpen}
+      repositionInputs={false}
     >
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
       <DrawerContent

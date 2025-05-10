@@ -73,7 +73,11 @@ export default function EmailFormView({
 
         <div className="mt-6 text-center">
           <button
-            onClick={onRegister}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onRegister();
+            }}
             className="text-sm text-neutral-600 hover:text-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
           >
             ¿No tienes una cuenta?{" "}

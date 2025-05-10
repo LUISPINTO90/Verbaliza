@@ -103,7 +103,11 @@ export default function RegisterFormView({
 
         <div className="mt-6 text-center">
           <button
-            onClick={onLogin}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              onLogin();
+            }}
             className="text-sm text-neutral-600 hover:text-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
           >
             ¿Ya tienes una cuenta?{" "}

@@ -29,10 +29,14 @@ interface AuthDialogProps {
 // Tipo que representa todas las posibles vistas
 type AuthView = "main" | "email" | "password" | "register";
 
+// Dirección de la animación
+type AnimationDirection = "forward" | "backward";
+
 export default function AuthDialog({ trigger }: AuthDialogProps) {
   const [open, setOpen] = useState(false);
   const [currentView, setCurrentView] = useState<AuthView>("main");
   const [previousView, setPreviousView] = useState<AuthView>("main");
+  const [direction, setDirection] = useState<AnimationDirection>("forward");
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   // Estado para controlar si el teclado está abierto
@@ -56,30 +60,44 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
   }, []);
 
   // Función para cambiar de vista manteniendo el registro de la vista anterior
-  const navigateTo = (nextView: AuthView) => {
+  const navigateTo = (
+    nextView: AuthView,
+    animationDirection: AnimationDirection
+  ) => {
     setPreviousView(currentView);
-    setCurrentView(nextView);
+    setDirection(animationDirection);
+
+    // Pequeño retraso para que la animación de salida complete antes de cambiar la vista
+    // Esto evita la "doble animación" que se ve
+    setTimeout(() => {
+      setCurrentView(nextView);
+    }, 50);
   };
 
   const handleEmailClick = () => {
-    navigateTo("email");
+    navigateTo("email", "forward");
   };
 
   // Se actualiza para usar la vista almacenada en previousView
   const handleBackClick = () => {
-    if (currentView === "register") {
-      // Si estamos en la vista de registro, regresamos a la vista anterior
-      setCurrentView(previousView);
-    } else if (currentView === "email") {
-      setCurrentView("main");
-    } else if (currentView === "password") {
-      setCurrentView("email");
-    }
+    setDirection("backward");
+
+    // Pequeño retraso para que la animación de salida complete antes de cambiar la vista
+    setTimeout(() => {
+      if (currentView === "register") {
+        // Si estamos en la vista de registro, regresamos a la vista anterior
+        setCurrentView(previousView);
+      } else if (currentView === "email") {
+        setCurrentView("main");
+      } else if (currentView === "password") {
+        setCurrentView("email");
+      }
+    }, 50);
   };
 
   const handleContinue = () => {
     if (currentView === "email") {
-      navigateTo("password");
+      navigateTo("password", "forward");
     } else if (currentView === "password" || currentView === "register") {
       // Aquí iría la lógica para iniciar sesión o registrarse
       setOpen(false);
@@ -88,12 +106,12 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
 
   // Navega a la vista de registro, guardando la vista actual como anterior
   const handleRegister = () => {
-    navigateTo("register");
+    navigateTo("register", "forward");
   };
 
   // Navega a la vista de email, guardando la vista actual como anterior
   const handleLogin = () => {
-    navigateTo("email");
+    navigateTo("email", "forward");
   };
 
   // Resetear la vista al cerrar el diálogo
@@ -104,6 +122,7 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
       setTimeout(() => {
         setCurrentView("main");
         setPreviousView("main");
+        setDirection("forward");
       }, 300);
     }
   };
@@ -111,15 +130,20 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
   // Contenido compartido entre Dialog y Drawer
   const sharedContent = (
     <div className="relative overflow-hidden">
-      <AnimatePresence mode="wait" initial={false}>
+      <AnimatePresence mode="wait" initial={false} custom={direction}>
         {currentView === "main" ? (
-          <MainAuthOptions key="main" onEmailClick={handleEmailClick} />
+          <MainAuthOptions
+            key="main"
+            onEmailClick={handleEmailClick}
+            direction={direction}
+          />
         ) : currentView === "email" ? (
           <EmailFormView
             key="email"
             onBack={handleBackClick}
             onContinue={handleContinue}
             onRegister={handleRegister}
+            direction={direction}
           />
         ) : currentView === "password" ? (
           <PasswordFormView
@@ -127,6 +151,7 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
             onBack={handleBackClick}
             onContinue={handleContinue}
             onRegister={handleRegister}
+            direction={direction}
           />
         ) : (
           <RegisterFormView
@@ -134,6 +159,7 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
             onBack={handleBackClick}
             onContinue={handleContinue}
             onLogin={handleLogin}
+            direction={direction}
           />
         )}
       </AnimatePresence>

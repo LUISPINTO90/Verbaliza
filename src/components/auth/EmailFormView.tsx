@@ -61,7 +61,6 @@ export default function EmailFormView({
             type="email"
             placeholder="tucorreo@ejemplo.com"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
-            required
           />
         </div>
 

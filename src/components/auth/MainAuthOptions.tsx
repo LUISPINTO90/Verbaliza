@@ -8,16 +8,36 @@ import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface MainAuthOptionsProps {
   onEmailClick: () => void;
+  direction: "forward" | "backward";
 }
 
 export default function MainAuthOptions({
   onEmailClick,
+  direction,
 }: MainAuthOptionsProps) {
+  // Simplificamos las variantes para el componente principal
+  const variants = {
+    enter: (direction: string) => ({
+      x: direction === "backward" ? "-100%" : "100%",
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: string) => ({
+      x: direction === "backward" ? "100%" : "-100%",
+      opacity: 0,
+    }),
+  };
+
   return (
     <motion.div
-      initial={{ x: 0 }}
-      animate={{ x: 0 }}
-      exit={{ x: "-100%" }}
+      custom={direction}
+      variants={variants}
+      initial="enter"
+      animate="center"
+      exit="exit"
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="w-full"
     >

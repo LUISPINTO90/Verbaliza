@@ -10,18 +10,38 @@ interface RegisterFormViewProps {
   onBack: () => void;
   onContinue: () => void;
   onLogin: () => void;
+  direction: "forward" | "backward";
 }
 
 export default function RegisterFormView({
   onBack,
   onContinue,
   onLogin,
+  direction,
 }: RegisterFormViewProps) {
+  // Usamos un sistema de variantes más robusto que funciona con AnimatePresence
+  const variants = {
+    enter: (direction: string) => ({
+      x: direction === "forward" ? "100%" : "-100%",
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: string) => ({
+      x: direction === "forward" ? "-100%" : "100%",
+      opacity: 0,
+    }),
+  };
+
   return (
     <motion.div
-      initial={{ x: "100%" }}
-      animate={{ x: 0 }}
-      exit={{ x: "-100%" }}
+      custom={direction}
+      variants={variants}
+      initial="enter"
+      animate="center"
+      exit="exit"
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="w-full"
     >

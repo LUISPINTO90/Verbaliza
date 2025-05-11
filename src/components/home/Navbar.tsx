@@ -2,8 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import AuthDialog from "@/components/auth/AuthDialog";
+import UserProfile from "@/components/home/UserProfile";
+import { auth } from "@/auth";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const session = await auth();
+
   return (
     <nav className="w-full border-b border-gray-100 bg-white">
       <div className="container mx-auto flex h-16 items-center px-4 sm:px-6 lg:px-8">
@@ -24,30 +28,36 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden sm:flex items-center ml-auto">
-            {/* Botón Iniciar sesión */}
-            <AuthDialog
-              trigger={
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 mr-3 cursor-pointer"
-                >
-                  Iniciar sesión
-                </Button>
-              }
-            />
+            {session?.user ? (
+              <UserProfile user={session.user} />
+            ) : (
+              <>
+                {/* Botón Iniciar sesión */}
+                <AuthDialog
+                  trigger={
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 mr-3 cursor-pointer"
+                    >
+                      Iniciar sesión
+                    </Button>
+                  }
+                />
 
-            {/* Botón Regístrate */}
-            <AuthDialog
-              trigger={
-                <Button
-                  size="lg"
-                  className="bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                >
-                  Regístrate
-                </Button>
-              }
-            />
+                {/* Botón Regístrate */}
+                <AuthDialog
+                  trigger={
+                    <Button
+                      size="lg"
+                      className="bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    >
+                      Regístrate
+                    </Button>
+                  }
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

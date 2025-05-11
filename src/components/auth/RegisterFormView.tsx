@@ -5,12 +5,19 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { RegisterFormData, registerSchema } from "@/lib/validations";
+import { useState } from "react";
 
 interface RegisterFormViewProps {
   onBack: () => void;
-  onContinue: () => void;
+  onContinue: (data: RegisterFormData) => void;
   onLogin: () => void;
   direction: "forward" | "backward";
+  email?: string;
+  error?: string;
+  isLoading?: boolean; // Hacer opcional para que coincida con AuthDialog
 }
 
 export default function RegisterFormView({
@@ -18,8 +25,41 @@ export default function RegisterFormView({
   onContinue,
   onLogin,
   direction,
+  email = "",
+  error = "",
+  isLoading: externalLoading, // Renombrar para evitar confusión con el estado interno
 }: RegisterFormViewProps) {
-  // Usamos un sistema de variantes más robusto que funciona con AnimatePresence
+  const [internalLoading, setInternalLoading] = useState(false);
+
+  // No creamos una variable loading separada
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      name: "",
+      email: email,
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const onSubmit = async (data: RegisterFormData) => {
+    setInternalLoading(true);
+
+    try {
+      await onContinue(data);
+    } catch (err) {
+      console.error("Error en el formulario de registro:", err);
+    } finally {
+      setInternalLoading(false);
+    }
+  };
+
+  // Variantes de animación
   const variants = {
     enter: (direction: string) => ({
       x: direction === "forward" ? "100%" : "-100%",
@@ -63,13 +103,27 @@ export default function RegisterFormView({
         Crea una nueva cuenta para acceder a todas las funciones.
       </DialogDescription>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onContinue();
-        }}
-      >
-        <div className="mb-6">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-4">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-neutral-700 mb-2"
+          >
+            Nombre
+          </label>
+          <Input
+            id="name"
+            type="text"
+            {...register("name")}
+            placeholder="Tu nombre"
+            className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
+          />
+          {errors.name && (
+            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          )}
+        </div>
+
+        <div className="mb-4">
           <label
             htmlFor="register-email"
             className="block text-sm font-medium text-neutral-700 mb-2"
@@ -79,12 +133,16 @@ export default function RegisterFormView({
           <Input
             id="register-email"
             type="email"
+            {...register("email")}
             placeholder="tucorreo@ejemplo.com"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
           />
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          )}
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4">
           <label
             htmlFor="register-password"
             className="block text-sm font-medium text-neutral-700 mb-2"
@@ -94,9 +152,15 @@ export default function RegisterFormView({
           <Input
             id="register-password"
             type="password"
+            {...register("password")}
             placeholder="••••••••"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
           />
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.password.message}
+            </p>
+          )}
         </div>
 
         <div className="mb-6">
@@ -109,16 +173,32 @@ export default function RegisterFormView({
           <Input
             id="confirm-password"
             type="password"
+            {...register("confirmPassword")}
             placeholder="••••••••"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
           />
+          {errors.confirmPassword && (
+            <p className="mt-1 text-sm text-red-600">
+              {errors.confirmPassword.message}
+            </p>
+          )}
+          {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
         </div>
 
         <Button
           type="submit"
           className="w-full bg-neutral-700 text-white hover:bg-neutral-800 py-6 cursor-pointer"
+          disabled={
+            externalLoading !== undefined ? externalLoading : internalLoading
+          }
         >
-          Crear cuenta
+          {externalLoading !== undefined
+            ? externalLoading
+              ? "Cargando..."
+              : "Crear cuenta"
+            : internalLoading
+            ? "Cargando..."
+            : "Crear cuenta"}
         </Button>
 
         <div className="mt-6 text-center">

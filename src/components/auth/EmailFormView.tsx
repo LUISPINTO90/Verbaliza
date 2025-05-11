@@ -5,10 +5,22 @@ import { Input } from "@/components/ui/input";
 import { ChevronLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useState } from "react";
+import { checkEmail } from "@/app/actions/auth";
+
+// Esquema sólo para el correo
+const emailSchema = z.object({
+  email: z.string().email("Correo electrónico inválido"),
+});
+
+type EmailFormData = z.infer<typeof emailSchema>;
 
 interface EmailFormViewProps {
   onBack: () => void;
-  onContinue: () => void;
+  onContinue: (email: string) => void;
   onRegister: () => void;
   direction: "forward" | "backward";
 }
@@ -19,7 +31,50 @@ export default function EmailFormView({
   onRegister,
   direction,
 }: EmailFormViewProps) {
-  // Usamos un sistema de variantes más robusto que funciona con AnimatePresence
+  const [emailError, setEmailError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<EmailFormData>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const onSubmit = async (data: EmailFormData) => {
+    setIsLoading(true);
+    setEmailError("");
+
+    try {
+      // Comprobar si el correo existe
+      const result = await checkEmail(data.email);
+
+      if (result.error) {
+        setEmailError("Error al verificar el correo");
+        return;
+      }
+
+      if (result.exists && result.provider === "google") {
+        setEmailError(
+          "Ya existe una cuenta con este correo asociada a Google. Inicia sesión con Google"
+        );
+        return;
+      }
+
+      // Continuar al siguiente paso
+      onContinue(data.email);
+    } catch {
+      setEmailError("Error al verificar el correo");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Variantes de animación
   const variants = {
     enter: (direction: string) => ({
       x: direction === "forward" ? "100%" : "-100%",
@@ -63,12 +118,7 @@ export default function EmailFormView({
         Ingresa tu correo electrónico para continuar.
       </DialogDescription>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          onContinue();
-        }}
-      >
+      <form onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-6">
           <label
             htmlFor="email"
@@ -79,16 +129,24 @@ export default function EmailFormView({
           <Input
             id="email"
             type="email"
+            {...register("email")}
             placeholder="tucorreo@ejemplo.com"
             className="w-full py-6 rounded-md border-neutral-300 focus:border-neutral-700 focus:ring-0 focus-visible:border-neutral-700 focus-visible:ring-0"
           />
+          {errors.email && (
+            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          )}
+          {emailError && (
+            <p className="mt-1 text-sm text-red-600">{emailError}</p>
+          )}
         </div>
 
         <Button
           type="submit"
           className="w-full bg-neutral-700 text-white hover:bg-neutral-800 py-6 cursor-pointer"
+          disabled={isLoading}
         >
-          Continuar
+          {isLoading ? "Verificando..." : "Continuar"}
         </Button>
 
         <div className="mt-6 text-center">

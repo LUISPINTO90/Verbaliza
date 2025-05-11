@@ -1,10 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import { GoogleIcon } from "@/components/icons/GoogleIcon"; // Importamos nuestro icono personalizado
 
 interface MainAuthOptionsProps {
   onEmailClick: () => void;
@@ -15,6 +17,19 @@ export default function MainAuthOptions({
   onEmailClick,
   direction,
 }: MainAuthOptionsProps) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Función para manejar el inicio de sesión con Google
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await signIn("google", { callbackUrl: "/" });
+    } catch (error) {
+      console.error("Error al iniciar sesión con Google:", error);
+      setIsLoading(false);
+    }
+  };
+
   // Simplificamos las variantes para el componente principal
   const variants = {
     enter: (direction: string) => ({
@@ -56,14 +71,15 @@ export default function MainAuthOptions({
         <Button
           variant="outline"
           className="w-full mb-3 py-6 relative cursor-pointer"
-          onClick={() => {
-            // Implementación futura de autenticación con Google
-          }}
+          onClick={handleGoogleSignIn}
+          disabled={isLoading}
         >
           <div className="absolute left-6">
-            <Image src="/google.svg" alt="Google" width={20} height={20} />
+            <GoogleIcon size={20} />
           </div>
-          <span className="mx-auto">Usar Google</span>
+          <span className="mx-auto">
+            {isLoading ? "Cargando..." : "Usar Google"}
+          </span>
         </Button>
 
         {/* Botón de Correo Electrónico */}
@@ -71,6 +87,7 @@ export default function MainAuthOptions({
           variant="outline"
           className="w-full py-6 relative cursor-pointer"
           onClick={onEmailClick}
+          disabled={isLoading}
         >
           <div className="absolute left-6">
             <Mail size={20} />

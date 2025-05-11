@@ -19,8 +19,10 @@ import MainAuthOptions from "./MainAuthOptions";
 import EmailFormView from "./EmailFormView";
 import PasswordFormView from "./PasswordFormView";
 import RegisterFormView from "./RegisterFormView";
-// Añadimos la importación de cn desde utils
 import { cn } from "@/lib/utils";
+import { RegisterFormData } from "@/lib/validations";
+import { registerUser } from "@/app/actions/auth";
+import { signIn } from "next-auth/react";
 
 interface AuthDialogProps {
   trigger: React.ReactNode;
@@ -37,6 +39,8 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
   const [currentView, setCurrentView] = useState<AuthView>("main");
   const [previousView, setPreviousView] = useState<AuthView>("main");
   const [direction, setDirection] = useState<AnimationDirection>("forward");
+  const [currentEmail, setCurrentEmail] = useState("");
+  const [error, setError] = useState("");
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   // Estado para controlar si el teclado está abierto
@@ -68,7 +72,6 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
     setDirection(animationDirection);
 
     // Pequeño retraso para que la animación de salida complete antes de cambiar la vista
-    // Esto evita la "doble animación" que se ve
     setTimeout(() => {
       setCurrentView(nextView);
     }, 50);
@@ -95,13 +98,21 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
     }, 50);
   };
 
-  const handleContinue = () => {
-    if (currentView === "email") {
-      navigateTo("password", "forward");
-    } else if (currentView === "password" || currentView === "register") {
-      // Aquí iría la lógica para iniciar sesión o registrarse
-      setOpen(false);
-    }
+  const handleEmailContinue = (email: string) => {
+    setCurrentEmail(email);
+    navigateTo("password", "forward");
+  };
+
+  const handlePasswordContinue = () => {
+    // La lógica de inicio de sesión se maneja en el componente PasswordFormView
+    setOpen(false);
+    // Reiniciar estados
+    setTimeout(() => {
+      setCurrentView("main");
+      setPreviousView("main");
+      setDirection("forward");
+      setCurrentEmail("");
+    }, 300);
   };
 
   // Navega a la vista de registro, guardando la vista actual como anterior
@@ -114,6 +125,77 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
     navigateTo("email", "forward");
   };
 
+  // Manejar el registro de usuarios
+  const handleRegisterSubmit = async (data: RegisterFormData) => {
+    try {
+      // Usar la acción del servidor para registrar el usuario
+      const result = await registerUser(data);
+
+      if (result.error) {
+        if (result.error === "google-exists") {
+          setError(
+            "Ya existe una cuenta con este correo asociada a Google. Inicia sesión con Google"
+          );
+        } else if (result.error === "email-exists") {
+          setError(
+            "Ya existe una cuenta con este correo. Por favor, inicia sesión"
+          );
+        } else {
+          setError("Error al crear la cuenta");
+        }
+        return;
+      }
+
+      // Si el registro fue exitoso, intentar iniciar sesión
+      try {
+        const signInResult = await signIn("credentials", {
+          redirect: false,
+          email: data.email,
+          password: data.password,
+        });
+
+        if (signInResult?.error) {
+          console.error(
+            "Error signing in after registration:",
+            signInResult.error
+          );
+          // A pesar del error, la cuenta fue creada
+          setError(
+            "Cuenta creada correctamente. Por favor, inicia sesión manualmente."
+          );
+
+          // Redirigir a la vista de inicio de sesión después de un momento
+          setTimeout(() => {
+            setCurrentView("email");
+            setCurrentEmail(data.email);
+            setError("");
+          }, 3000);
+
+          return;
+        }
+
+        // Éxito - cerrar modal y refrescar la página
+        setOpen(false);
+
+        // Es mejor usar una redirección directa
+        window.location.href = "/";
+      } catch (signInError) {
+        console.error("Error during sign in after registration:", signInError);
+        setError("Cuenta creada. Por favor, inicia sesión manualmente.");
+
+        // Redirigir a la vista de inicio de sesión
+        setTimeout(() => {
+          setCurrentView("email");
+          setCurrentEmail(data.email);
+          setError("");
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Error general durante el registro:", error);
+      setError("Error al crear la cuenta. Inténtalo de nuevo más tarde.");
+    }
+  };
+
   // Resetear la vista al cerrar el diálogo
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
@@ -123,6 +205,8 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
         setCurrentView("main");
         setPreviousView("main");
         setDirection("forward");
+        setCurrentEmail("");
+        setError("");
       }, 300);
     }
   };
@@ -141,7 +225,7 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
           <EmailFormView
             key="email"
             onBack={handleBackClick}
-            onContinue={handleContinue}
+            onContinue={handleEmailContinue}
             onRegister={handleRegister}
             direction={direction}
           />
@@ -149,17 +233,20 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
           <PasswordFormView
             key="password"
             onBack={handleBackClick}
-            onContinue={handleContinue}
+            onContinue={handlePasswordContinue}
             onRegister={handleRegister}
             direction={direction}
+            email={currentEmail}
           />
         ) : (
           <RegisterFormView
             key="register"
             onBack={handleBackClick}
-            onContinue={handleContinue}
+            onContinue={handleRegisterSubmit}
             onLogin={handleLogin}
             direction={direction}
+            email={currentEmail}
+            error={error}
           />
         )}
       </AnimatePresence>

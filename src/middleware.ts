@@ -3,12 +3,24 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export default async function middleware(request: NextRequest) {
-  // Permitir acceso a rutas de autenticación y recursos estáticos
+  const { pathname } = request.nextUrl;
+
+  // Permitir acceso completo a rutas de autenticación, assets estáticos y archivos del sistema
   if (
-    request.nextUrl.pathname.startsWith("/api/auth") ||
-    request.nextUrl.pathname.startsWith("/_next") ||
-    request.nextUrl.pathname.startsWith("/favicon") ||
-    request.nextUrl.pathname === "/"
+    // Rutas de autenticación
+    pathname.startsWith("/api/auth") ||
+    // Archivos estáticos de Next.js
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/__next") ||
+    // Assets del directorio public
+    pathname.startsWith("/logo") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/images") ||
+    pathname.startsWith("/icons") ||
+    // Otros archivos estáticos comunes
+    (pathname.includes(".") && !pathname.includes("/api/")) ||
+    // Página principal
+    pathname === "/"
   ) {
     return NextResponse.next();
   }
@@ -25,8 +37,16 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // Matcher más específico que excluye explícitamente los assets
   matcher: [
-    // Proteger todas las rutas excepto las especificadas en la función
-    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api/auth (auth routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files (logo, etc)
+     */
+    "/((?!api/auth|_next/static|_next/image|favicon.ico|logo|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.ico).*)",
   ],
 };

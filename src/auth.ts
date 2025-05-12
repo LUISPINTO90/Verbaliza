@@ -5,11 +5,8 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 
-// Crea una configuración que no utilice el adaptador cuando esté en el middleware
-const isInMiddleware = typeof process.env.NEXT_RUNTIME === "string";
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: isInMiddleware ? undefined : PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma), // ← Siempre usar el adaptador
   session: {
     strategy: "jwt",
   },
@@ -19,32 +16,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   debug: process.env.NODE_ENV === "development", // Habilitar logs en desarrollo
   callbacks: {
-    async signIn({ user, account }) {
-      // No ejecutar esta lógica en el middleware
-      if (isInMiddleware) return true;
-
+    async signIn({ user, account, profile }) {
       // Si el usuario ya existe y está intentando iniciar sesión con Google
       if (account?.provider === "google") {
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email! },
-          include: { accounts: true },
-        });
-
-        // Si el usuario existe pero no tiene una cuenta Google vinculada
-        if (
-          existingUser &&
-          !existingUser.accounts.some(
-            (acc: { provider: string }) => acc.provider === "google"
-          )
-        ) {
-          // Actualizar usuario con datos de Google
-          await prisma.user.update({
-            where: { id: existingUser.id },
-            data: {
-              name: user.name,
-              image: user.image,
-            },
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email! },
+            include: { accounts: true },
           });
+
+          // Si el usuario existe pero no tiene una cuenta Google vinculada
+          if (
+            existingUser &&
+            !existingUser.accounts.some((acc) => acc.provider === "google")
+          ) {
+            // Actualizar usuario con datos de Google
+            await prisma.user.update({
+              where: { id: existingUser.id },
+              data: {
+                name: user.name || profile?.name,
+                image: user.image || profile?.picture,
+              },
+            });
+          }
+        } catch (error) {
+          console.error("Error in signIn callback:", error);
+          return false;
         }
       }
 
@@ -62,8 +59,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return session;
     },
-    async authorized({ auth }) {
-      // Simplificamos para el middleware
+    async authorized({ auth, request: { nextUrl } }) {
+      // Permitir acceso sin autenticación a las rutas públicas
+      const isPublicPath =
+        nextUrl.pathname === "/" || nextUrl.pathname.startsWith("/api/auth");
+
+      if (isPublicPath) return true;
+
+      // Para rutas protegidas, verificar autenticación
       return !!auth;
     },
   },
@@ -71,6 +74,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
     }),
     Credentials({
       name: "credentials",
@@ -103,7 +113,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           // Verificar si es una cuenta de Google
           const hasGoogleAccount = user.accounts.some(
-            (acc: { provider: string }) => acc.provider === "google"
+            (acc) => acc.provider === "google"
           );
 
           if (hasGoogleAccount && !user.password) {

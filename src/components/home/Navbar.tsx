@@ -1,13 +1,20 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import AuthDialog from "@/components/auth/AuthDialog";
 import UserProfile from "@/components/home/UserProfile";
-import { auth } from "@/auth";
 import { SquarePen } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
-export default async function Navbar() {
-  const session = await auth();
+export default function Navbar() {
+  const { data: session } = useSession();
+  const pathname = usePathname();
+
+  // No mostrar el botón "Escribir" en la página de escritura
+  const isWritePage = pathname === "/write";
 
   return (
     <nav className="w-full border-b border-gray-100 bg-white">
@@ -33,17 +40,19 @@ export default async function Navbar() {
           <div className="flex items-center">
             {session?.user ? (
               <div className="flex items-center gap-3">
-                {/* Botón Escribir */}
-                <Link href="/write">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                  >
-                    <SquarePen className="h-4 w-4 mr-2" />
-                    Escribir
-                  </Button>
-                </Link>
+                {/* Botón Escribir - Solo mostrar si NO estamos en la página de escritura */}
+                {!isWritePage && (
+                  <Link href="/write">
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                    >
+                      <SquarePen className="h-4 w-4 mr-2" />
+                      Escribir
+                    </Button>
+                  </Link>
+                )}
 
                 {/* Perfil de usuario */}
                 <UserProfile user={session.user} />

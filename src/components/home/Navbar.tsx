@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import AuthDialog from "@/components/auth/AuthDialog";
 import UserProfile from "@/components/home/UserProfile";
 import { auth } from "@/auth";
+import { SquarePen } from "lucide-react";
 
 export default async function Navbar() {
   const session = await auth();
@@ -11,7 +12,8 @@ export default async function Navbar() {
   return (
     <nav className="w-full border-b border-gray-100 bg-white">
       <div className="container mx-auto flex h-16 items-center px-4 sm:px-6 lg:px-8">
-        <div className="w-full flex justify-center sm:justify-start items-center">
+        <div className="w-full flex justify-between items-center">
+          {/* Logo en la izquierda */}
           <Link
             href="/"
             className="flex items-center transition-all duration-300 ease-in-out transform hover:scale-105"
@@ -27,18 +29,34 @@ export default async function Navbar() {
             />
           </Link>
 
-          <div className="hidden sm:flex items-center ml-auto">
+          {/* Controles de usuario a la derecha */}
+          <div className="flex items-center">
             {session?.user ? (
-              <UserProfile user={session.user} />
+              <div className="flex items-center gap-3">
+                {/* Botón Escribir */}
+                <Link href="/write">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
+                  >
+                    <SquarePen className="h-4 w-4 mr-2" />
+                    Escribir
+                  </Button>
+                </Link>
+
+                {/* Perfil de usuario */}
+                <UserProfile user={session.user} />
+              </div>
             ) : (
-              <>
+              <div className="hidden sm:flex items-center gap-3">
                 {/* Botón Iniciar sesión */}
                 <AuthDialog
                   trigger={
                     <Button
                       variant="outline"
                       size="lg"
-                      className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 mr-3 cursor-pointer"
+                      className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                     >
                       Iniciar sesión
                     </Button>
@@ -56,7 +74,7 @@ export default async function Navbar() {
                     </Button>
                   }
                 />
-              </>
+              </div>
             )}
           </div>
         </div>

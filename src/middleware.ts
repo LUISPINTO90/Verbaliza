@@ -19,13 +19,13 @@ export default async function middleware(request: NextRequest) {
     pathname.startsWith("/icons") ||
     // Otros archivos estáticos comunes
     (pathname.includes(".") && !pathname.includes("/api/")) ||
-    // Página principal
+    // Página principal (permitir acceso sin autenticación)
     pathname === "/"
   ) {
     return NextResponse.next();
   }
 
-  // Verificar autenticación para otras rutas
+  // Verificar autenticación para rutas protegidas
   const session = await auth();
 
   if (!session) {
@@ -37,16 +37,7 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Matcher más específico que excluye explícitamente los assets
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (auth routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files (logo, etc)
-     */
     "/((?!api/auth|_next/static|_next/image|favicon.ico|logo|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.ico).*)",
   ],
 };

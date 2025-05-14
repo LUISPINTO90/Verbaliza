@@ -59,27 +59,14 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-3">
-                {/* Botón Iniciar sesión */}
-                <AuthDialog
-                  trigger={
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="text-neutral-700 border-neutral-300 hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
-                    >
-                      Iniciar sesión
-                    </Button>
-                  }
-                />
-
-                {/* Botón Regístrate */}
+                {/* Botón único para iniciar sesión */}
                 <AuthDialog
                   trigger={
                     <Button
                       size="lg"
                       className="bg-neutral-700 text-white hover:bg-neutral-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
                     >
-                      Regístrate
+                      Iniciar sesión
                     </Button>
                   }
                 />

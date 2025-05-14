@@ -93,16 +93,18 @@ export function EditorFloatingMenu({
 
   const shouldShow = (editor: Editor) => {
     const { selection } = editor.state;
+    const { from } = selection;
 
-    if (
-      !selection.empty ||
-      selection.$head.parent.content.size > 0 ||
-      selection.$head.depth !== 1
-    ) {
-      return false;
-    }
+    // Verificar si estamos en un párrafo vacío
+    if (!selection.empty) return false;
 
-    return true;
+    const currentNode = editor.state.doc.resolve(from).parent;
+    const isParagraph = currentNode.type.name === "paragraph";
+    const isEmpty = currentNode.content.size === 0;
+    const isAtStart = selection.$head.parentOffset === 0;
+
+    // Solo mostrar si estamos en un párrafo vacío al inicio del nodo
+    return isParagraph && isEmpty && isAtStart;
   };
 
   const addImage = async (e: React.FormEvent<HTMLInputElement>) => {
@@ -122,12 +124,51 @@ export function EditorFloatingMenu({
       shouldShow={() => shouldShow(editor)}
       tippyOptions={{
         duration: 100,
+        placement: "left",
+        offset: [0, 0],
+        // Desactivar modificadores automáticos
+        popperOptions: {
+          strategy: "absolute",
+          modifiers: [
+            {
+              name: "offset",
+              options: {
+                offset: [0, 0],
+              },
+            },
+            {
+              name: "preventOverflow",
+              enabled: false,
+            },
+            {
+              name: "flip",
+              enabled: false,
+            },
+          ],
+        },
+        // Posicionamiento manual al nivel del cursor
+        onShow(instance: { popper?: HTMLElement }) {
+          const { selection } = editor.state;
+          const { from } = selection;
+
+          // Obtener las coordenadas exactas del cursor
+          const coords = editor.view.coordsAtPos(from);
+
+          // Posicionar el botón con mucha más separación a la izquierda
+          if (instance.popper) {
+            instance.popper.style.position = "fixed";
+            instance.popper.style.left = `${coords.left - 120}px`; // 120px de separación
+            instance.popper.style.top = `${coords.top}px`;
+            instance.popper.style.transform = "none";
+            instance.popper.style.zIndex = "1000";
+          }
+        },
       }}
     >
       <div ref={menuRef}>
         <button
           ref={buttonRef}
-          className={`w-8 h-8 rounded-full border-2 border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-all ${
+          className={`w-8 h-8 rounded-full border-2 border-gray-300 bg-white hover:bg-gray-50 flex items-center justify-center transition-all shadow-sm hover:shadow-md ${
             showFloatingMenu ? "rotate-45" : ""
           }`}
           onClick={() => setShowFloatingMenu(!showFloatingMenu)}

@@ -10,6 +10,7 @@ import {
   Link,
   Type,
   Quote,
+  X,
 } from "lucide-react";
 import { Dispatch, SetStateAction, ReactElement } from "react";
 
@@ -92,14 +93,27 @@ export function EditorBubbleMenu({
     },
   ];
 
+  const handleClearSelection = () => {
+    editor.chain().focus().setTextSelection(editor.state.selection.to).run();
+  };
+
+  const shouldShow = () => {
+    const { selection } = editor.state;
+    const { from, to } = selection;
+
+    // Solo mostrar si hay texto seleccionado
+    return from !== to && showBubbleMenu;
+  };
+
   return (
     <BubbleMenu
-      className={`${
-        showBubbleMenu ? "flex" : "hidden"
-      } bg-gray-900 rounded-lg shadow-lg`}
+      className={`${shouldShow() ? "flex" : "hidden"} items-center`}
       editor={editor}
+      shouldShow={shouldShow}
       tippyOptions={{
-        moveTransition: "transform 0.15s ease-out",
+        duration: 100,
+        placement: "bottom",
+        offset: [0, 8],
       }}
     >
       {showLinkSelector ? (
@@ -109,19 +123,33 @@ export function EditorBubbleMenu({
           setShowLinkSelector={setShowLinkSelector}
         />
       ) : (
-        <div className="flex items-center px-2 py-1">
-          {items.map((item) => (
-            <button
-              key={item.name}
-              className={`p-2 text-white hover:bg-gray-700 rounded transition-colors ${
-                item.isActive() ? "bg-blue-600" : ""
-              } ${item.disable?.() ? "opacity-50 cursor-not-allowed" : ""}`}
-              disabled={item.disable?.()}
-              onClick={item.command}
-            >
-              {item.icon}
-            </button>
-          ))}
+        <div className="flex items-center bg-gray-900 rounded-lg shadow-lg border border-gray-800">
+          {/* Botón X para cerrar */}
+          <button
+            className="p-2 text-white hover:bg-gray-700 rounded-l-lg transition-colors border-r border-gray-700"
+            onClick={handleClearSelection}
+          >
+            <X className="size-4" />
+          </button>
+
+          {/* Botones de formato */}
+          <div className="flex items-center px-1">
+            {items.map((item, index) => (
+              <button
+                key={item.name}
+                className={`p-2 text-white hover:bg-gray-700 rounded transition-colors ${
+                  item.isActive() ? "bg-blue-600" : ""
+                } ${item.disable?.() ? "opacity-50 cursor-not-allowed" : ""} ${
+                  index === items.length - 1 ? "rounded-r-lg" : ""
+                }`}
+                disabled={item.disable?.()}
+                onClick={item.command}
+                title={item.name}
+              >
+                {item.icon}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </BubbleMenu>

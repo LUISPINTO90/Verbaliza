@@ -57,10 +57,7 @@ export default function WritePage() {
         className="max-w-4xl mx-auto px-4 py-8"
       >
         <div className="bg-white">
-          <WritingEditor
-            placeholder="Comparte tus ideas..."
-            onUpdate={handleEditorUpdate}
-          />
+          <WritingEditor onUpdate={handleEditorUpdate} />
         </div>
       </motion.main>
 

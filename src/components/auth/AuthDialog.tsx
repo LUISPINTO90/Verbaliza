@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   Dialog,
@@ -14,255 +14,75 @@ import {
   DrawerTrigger,
   DrawerClose,
 } from "@/components/ui/drawer";
-import { AnimatePresence } from "framer-motion";
-import MainAuthOptions from "./MainAuthOptions";
-import EmailFormView from "./EmailFormView";
-import PasswordFormView from "./PasswordFormView";
-import RegisterFormView from "./RegisterFormView";
-import { cn } from "@/lib/utils";
-import { RegisterFormData } from "@/lib/validations";
-import { registerUser } from "@/app/actions/auth";
+import { Button } from "@/components/ui/button";
+import { DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { signIn } from "next-auth/react";
+import { GoogleIcon } from "@/components/icons/GoogleIcon";
 
 interface AuthDialogProps {
   trigger: React.ReactNode;
 }
 
-// Tipo que representa todas las posibles vistas
-type AuthView = "main" | "email" | "password" | "register";
-
-// Dirección de la animación
-type AnimationDirection = "forward" | "backward";
-
 export default function AuthDialog({ trigger }: AuthDialogProps) {
   const [open, setOpen] = useState(false);
-  const [currentView, setCurrentView] = useState<AuthView>("main");
-  const [previousView, setPreviousView] = useState<AuthView>("main");
-  const [direction, setDirection] = useState<AnimationDirection>("forward");
-  const [currentEmail, setCurrentEmail] = useState("");
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  // Estado para controlar si el teclado está abierto
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
-
-  // Función para detectar cambios en la altura de la ventana (teclado virtual)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const handleResize = () => {
-        // Una manera simplificada de detectar si el teclado está abierto
-        // en dispositivos móviles es verificar si la altura de la ventana
-        // es significativamente menor que la altura del dispositivo
-        const windowHeight = window.innerHeight;
-        const documentHeight = window.document.documentElement.clientHeight;
-        setIsKeyboardOpen(windowHeight < documentHeight * 0.8);
-      };
-
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
-    }
-  }, []);
-
-  // Función para cambiar de vista manteniendo el registro de la vista anterior
-  const navigateTo = (
-    nextView: AuthView,
-    animationDirection: AnimationDirection
-  ) => {
-    setPreviousView(currentView);
-    setDirection(animationDirection);
-
-    // Pequeño retraso para que la animación de salida complete antes de cambiar la vista
-    setTimeout(() => {
-      setCurrentView(nextView);
-    }, 50);
-  };
-
-  const handleEmailClick = () => {
-    navigateTo("email", "forward");
-  };
-
-  // Se actualiza para usar la vista almacenada en previousView
-  const handleBackClick = () => {
-    setDirection("backward");
-
-    // Pequeño retraso para que la animación de salida complete antes de cambiar la vista
-    setTimeout(() => {
-      if (currentView === "register") {
-        // Si estamos en la vista de registro, regresamos a la vista anterior
-        setCurrentView(previousView);
-      } else if (currentView === "email") {
-        setCurrentView("main");
-      } else if (currentView === "password") {
-        setCurrentView("email");
-      }
-    }, 50);
-  };
-
-  const handleEmailContinue = (email: string) => {
-    setCurrentEmail(email);
-    navigateTo("password", "forward");
-  };
-
-  const handlePasswordContinue = () => {
-    // La lógica de inicio de sesión se maneja en el componente PasswordFormView
-    setOpen(false);
-    // Reiniciar estados
-    setTimeout(() => {
-      setCurrentView("main");
-      setPreviousView("main");
-      setDirection("forward");
-      setCurrentEmail("");
-    }, 300);
-  };
-
-  // Navega a la vista de registro, guardando la vista actual como anterior
-  const handleRegister = () => {
-    navigateTo("register", "forward");
-  };
-
-  // Navega a la vista de email, guardando la vista actual como anterior
-  const handleLogin = () => {
-    navigateTo("email", "forward");
-  };
-
-  // Manejar el registro de usuarios
-  const handleRegisterSubmit = async (data: RegisterFormData) => {
+  // Función para manejar el inicio de sesión con Google
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
     try {
-      // Usar la acción del servidor para registrar el usuario
-      const result = await registerUser(data);
-
-      if (result.error) {
-        if (result.error === "google-exists") {
-          setError(
-            "Ya existe una cuenta con este correo asociada a Google. Inicia sesión con Google"
-          );
-        } else if (result.error === "email-exists") {
-          setError(
-            "Ya existe una cuenta con este correo. Por favor, inicia sesión"
-          );
-        } else {
-          setError("Error al crear la cuenta");
-        }
-        return;
-      }
-
-      // Si el registro fue exitoso, intentar iniciar sesión
-      try {
-        const signInResult = await signIn("credentials", {
-          redirect: false,
-          email: data.email,
-          password: data.password,
-        });
-
-        if (signInResult?.error) {
-          console.error(
-            "Error signing in after registration:",
-            signInResult.error
-          );
-          // A pesar del error, la cuenta fue creada
-          setError(
-            "Cuenta creada correctamente. Por favor, inicia sesión manualmente."
-          );
-
-          // Redirigir a la vista de inicio de sesión después de un momento
-          setTimeout(() => {
-            setCurrentView("email");
-            setCurrentEmail(data.email);
-            setError("");
-          }, 3000);
-
-          return;
-        }
-
-        // Éxito - cerrar modal y refrescar la página
-        setOpen(false);
-
-        // Es mejor usar una redirección directa
-        window.location.href = "/";
-      } catch (signInError) {
-        console.error("Error during sign in after registration:", signInError);
-        setError("Cuenta creada. Por favor, inicia sesión manualmente.");
-
-        // Redirigir a la vista de inicio de sesión
-        setTimeout(() => {
-          setCurrentView("email");
-          setCurrentEmail(data.email);
-          setError("");
-        }, 3000);
-      }
+      await signIn("google", { callbackUrl: "/" });
     } catch (error) {
-      console.error("Error general durante el registro:", error);
-      setError("Error al crear la cuenta. Inténtalo de nuevo más tarde.");
+      console.error("Error al iniciar sesión con Google:", error);
+      setIsLoading(false);
     }
   };
 
-  // Resetear la vista al cerrar el diálogo
-  const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
-    if (!newOpen) {
-      // Pequeño retraso para que no se vea el cambio antes de cerrarse
-      setTimeout(() => {
-        setCurrentView("main");
-        setPreviousView("main");
-        setDirection("forward");
-        setCurrentEmail("");
-        setError("");
-      }, 300);
-    }
-  };
+  // Contenido del diálogo
+  const content = (
+    <div className="w-full">
+      <div className="mb-3">
+        <DialogTitle className="text-2xl font-bold text-left">
+          Inicia sesión con Google
+        </DialogTitle>
+        <DialogDescription className="text-neutral-600 mt-2 text-left">
+          Usa tu cuenta de Google para acceder a Verbaliza de forma rápida y
+          segura.
+        </DialogDescription>
+      </div>
 
-  // Contenido compartido entre Dialog y Drawer
-  const sharedContent = (
-    <div className="relative overflow-hidden">
-      <AnimatePresence mode="wait" initial={false} custom={direction}>
-        {currentView === "main" ? (
-          <MainAuthOptions
-            key="main"
-            onEmailClick={handleEmailClick}
-            direction={direction}
-          />
-        ) : currentView === "email" ? (
-          <EmailFormView
-            key="email"
-            onBack={handleBackClick}
-            onContinue={handleEmailContinue}
-            onRegister={handleRegister}
-            direction={direction}
-          />
-        ) : currentView === "password" ? (
-          <PasswordFormView
-            key="password"
-            onBack={handleBackClick}
-            onContinue={handlePasswordContinue}
-            onRegister={handleRegister}
-            direction={direction}
-            email={currentEmail}
-          />
-        ) : (
-          <RegisterFormView
-            key="register"
-            onBack={handleBackClick}
-            onContinue={handleRegisterSubmit}
-            onLogin={handleLogin}
-            direction={direction}
-            email={currentEmail}
-            error={error}
-          />
-        )}
-      </AnimatePresence>
+      <Separator className="mb-6" />
+
+      <div className="flex-1 flex items-center justify-center">
+        <Button
+          variant="outline"
+          className="w-full py-6 relative cursor-pointer"
+          onClick={handleGoogleSignIn}
+          disabled={isLoading}
+        >
+          <div className="absolute left-6">
+            <GoogleIcon size={20} />
+          </div>
+          <span className="mx-auto">
+            {isLoading ? "Iniciando sesión..." : "Continuar con Google"}
+          </span>
+        </Button>
+      </div>
     </div>
   );
 
   // Versión para escritorio (Dialog)
   if (isDesktop) {
     return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>{trigger}</DialogTrigger>
-        <DialogContent className="sm:max-w-md overflow-hidden p-6">
+        <DialogContent className="sm:max-w-lg p-8 flex flex-col">
           <DialogClose className="absolute top-4 right-4 sr-only">
             Cerrar
           </DialogClose>
-          {sharedContent}
+          {content}
         </DialogContent>
       </Dialog>
     );
@@ -270,25 +90,11 @@ export default function AuthDialog({ trigger }: AuthDialogProps) {
 
   // Versión para móvil (Drawer)
   return (
-    <Drawer
-      open={open}
-      onOpenChange={handleOpenChange}
-      // Deshabilitar el escalado de fondo cuando el teclado está abierto
-      shouldScaleBackground={!isKeyboardOpen}
-      // Evitar que el drawer se cierre con un deslizamiento accidental
-      dismissible={!isKeyboardOpen}
-      repositionInputs={false}
-    >
+    <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-      <DrawerContent
-        className={cn(
-          "px-4 pb-8",
-          // Si el teclado está abierto, ajustamos las clases para mantener el drawer visible
-          isKeyboardOpen && "h-auto max-h-none"
-        )}
-      >
+      <DrawerContent className="px-6 pb-8">
         <DrawerClose className="sr-only">Cerrar</DrawerClose>
-        <div className="pt-4">{sharedContent}</div>
+        <div className="pt-6">{content}</div>
       </DrawerContent>
     </Drawer>
   );

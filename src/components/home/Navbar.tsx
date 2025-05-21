@@ -5,23 +5,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import AuthDialog from "@/components/auth/AuthDialog";
 import UserProfile from "@/components/home/UserProfile";
-import { SquarePen, Save, MoreHorizontal } from "lucide-react";
+import { SquarePen, Save } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface NavbarProps {
   onSave?: () => void;
   onPublish?: () => void;
-  lastSaved?: Date | null;
 }
 
-export default function Navbar({ onSave, onPublish, lastSaved }: NavbarProps) {
+export default function Navbar({ onSave, onPublish }: NavbarProps) {
   const { data: session } = useSession();
   const pathname = usePathname();
 
@@ -52,16 +45,11 @@ export default function Navbar({ onSave, onPublish, lastSaved }: NavbarProps) {
             {/* Mostrar estado cuando esté en la página de escritura */}
             {isWritePage && (
               <>
-                {/* Desktop: Mostrar "Borrador" y "Guardado" */}
+                {/* Desktop: Mostrar solo "Borrador" */}
                 <div className="hidden sm:flex space-x-3 h-6">
                   <span className="text-lg font-medium self-end leading-none -mb-0.5 bg-gradient-to-b from-neutral-500 to-neutral-800 bg-clip-text text-transparent">
                     Borrador
                   </span>
-                  {lastSaved && (
-                    <span className="text-sm self-end leading-none -mb-0.5 bg-gradient-to-b from-neutral-400 to-neutral-600 bg-clip-text text-transparent">
-                      Guardado
-                    </span>
-                  )}
                 </div>
 
                 {/* Mobile: Solo mostrar "Borrador" */}
@@ -102,26 +90,15 @@ export default function Navbar({ onSave, onPublish, lastSaved }: NavbarProps) {
                       </Button>
                     </div>
 
-                    {/* Mobile: Botón combinado con menú desplegable */}
+                    {/* Mobile: Solo botón de Publicar */}
                     <div className="sm:hidden">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="lg">
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem onClick={onSave}>
-                            Guardar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={onPublish}
-                            className="bg-gradient-to-b from-neutral-700 to-neutral-900 text-white hover:from-neutral-800 hover:to-neutral-950 focus:from-neutral-800 focus:to-neutral-950"
-                          >
-                            Publicar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        onClick={onPublish}
+                        size="sm"
+                        className="bg-gradient-to-b from-neutral-700 to-neutral-900 hover:from-neutral-800 hover:to-neutral-950 text-white"
+                      >
+                        Publicar
+                      </Button>
                     </div>
                   </>
                 ) : (
